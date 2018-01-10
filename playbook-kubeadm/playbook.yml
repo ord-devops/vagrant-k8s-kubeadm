@@ -1,0 +1,21 @@
+---
+- name: deploy cluster
+  become: true
+  hosts:
+    - nodes
+    - masters
+  roles: 
+    - kubeadm
+- name: init master
+  hosts:
+    - "{{ groups['masters'][0] }}"
+  roles:
+    - master
+  become: yes
+- name: join nodes
+  become: true
+  hosts:
+    - nodes
+    - masters
+  roles:
+    - node
