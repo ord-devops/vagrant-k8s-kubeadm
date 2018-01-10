@@ -1,0 +1,11 @@
+# Vagrantfile and playbook for kubeadm cluster
+
+Sets up a control node and a 4 node cluster
+
+* install vagrant and virtualbox
+* add a public ecdsa key in project root
+```
+vagrant up
+```
+
+
