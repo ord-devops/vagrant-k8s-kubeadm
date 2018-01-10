@@ -1,4 +1,18 @@
 ---
+- name: create ipa server
+  become: true
+  hosts: 
+    - ipa
+  roles:
+    - ipa
+
+- name: join ipa server
+  hosts:
+    - ipa_clients
+  roles:
+    - ipa_client
+  become: true
+
 - name: deploy cluster
   become: true
   hosts:
@@ -6,12 +20,14 @@
     - masters
   roles: 
     - kubeadm
+
 - name: init master
   hosts:
     - "{{ groups['masters'][0] }}"
   roles:
     - master
   become: yes
+
 - name: join nodes
   become: true
   hosts:
@@ -19,3 +35,9 @@
     - masters
   roles:
     - node
+- name: jenkins
+  become: true
+  hosts:
+    - jenkins
+  roles:
+    - jenkins

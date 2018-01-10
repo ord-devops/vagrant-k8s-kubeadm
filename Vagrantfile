@@ -8,6 +8,7 @@ cluster = {
   "node2"   => { :ip => "192.168.100.12", :cpus => 2, :mem => 2048 },
   "node3"   => { :ip => "192.168.100.13", :cpus => 2, :mem => 2048 },
   "jenkins" => { :ip => "192.168.100.20", :cpus => 1, :mem => 1024 },
+  "ipa"     => { :ip => "192.168.100.5", :cpus => 1, :mem => 1024 },
 }
 
 
@@ -17,7 +18,7 @@ Vagrant.configure("2") do |config|
       cfg.vm.provider :virtualbox do |vb, override|
         config.vm.box = "centos/7"
         override.vm.network :private_network, ip: "#{info[:ip]}"
-        override.vm.hostname = hostname
+        override.vm.hostname = "#{hostname}.lab.example.com"
         vb.name = hostname
         vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus]]
       end

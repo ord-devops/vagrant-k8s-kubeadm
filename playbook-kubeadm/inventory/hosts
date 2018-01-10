@@ -8,3 +8,12 @@ master.lab.example.com ansible_ssh_host=192.168.100.10
 
 [etcd]
 master.lab.example.com ansible_ssh_host=192.168.100.10
+
+[ipa]
+ipa.lab.example.com ansible_ssh_host=192.168.100.5
+
+[jenkins]
+jenkins.lab.example.com ansible_ssh_host=192.168.100.20
+
+[ipa_clients:children]
+jenkins
