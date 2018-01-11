@@ -61,6 +61,12 @@
     - name: disable swap
       command: swapoff --all
 
+    - name: swap - remove current swaps from fstab
+      lineinfile:
+        dest: /etc/fstab
+        regexp: '^/[\S]+\s+none\s+swap '
+        state: absent
+
     - name: k8s.conf sysctl
       copy:
         dest: /etc/sysctl.d/k8s.conf
@@ -72,4 +78,3 @@
     - name: k8s_sysctl load
       command: sysctl -p /etc/sysctl.d/k8s.conf
       when: sysctl_k8s.changed
-

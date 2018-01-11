@@ -19,17 +19,11 @@
       - git
       - make
 
-# Certificate
-# - name: create a key
-# - name: create a csr
-# - name: submit csr to kubernetes
-# - name: approve csr
-# - name: download certificate
-# - name: generate pfx
+- include: kubernetes.yml
 
 - name: slurp pfx from master
   fetch:
-    src: /root/jenkins.pfx
+    src: /etc/kubernetes/pki/jenkins.pfx
     dest: /tmp/jenkins.pfx
     flat: yes
   delegate_to: "{{ groups['masters'][0] }}"

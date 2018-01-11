@@ -2,3 +2,4 @@
 # defaults file for jenkins
 ipa_user: admin
 ipa_pass: admin-123
+csr_name: jenkins

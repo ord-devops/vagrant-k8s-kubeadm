@@ -14,6 +14,7 @@
              --pod-network-cidr={{ k8s_podCidr }}
   args:
     creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init
 
 - name: create .kube
   file:
@@ -25,6 +26,11 @@
     src: /etc/kubernetes/admin.conf
     dest: /root/.kube/config
     remote_src: true
+
+- name: make sure kubelet is running
+  systemd:
+    name: kubelet
+    state: started
 
 - name: generate join command for later use
   register: print_join_command
