@@ -11,6 +11,7 @@ cluster = {
   "ipa"     => { :ip => "192.168.100.5", :cpus => 1, :mem => 1024 },
 }
 
+dirname = File.expand_path(File.dirname(__FILE__))
 
 Vagrant.configure("2") do |config|
   cluster.each_with_index do |(hostname, info), index|
@@ -20,13 +21,21 @@ Vagrant.configure("2") do |config|
         override.vm.network :private_network, ip: "#{info[:ip]}"
         override.vm.hostname = "#{hostname}.lab.example.com"
         vb.name = hostname
+        if ['node1','node2','node3'].include?(hostname)
+          file_to_disk = "/cygdrive/d/VirtualBox VMs/gluster-#{hostname}-1.vdi"
+          unless File.exists?(file_to_disk)
+             vb.customize ['createhd', '--filename', file_to_disk, '--size', 1024 * 1024]
+          end 
+          vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+        end 
         vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus]]
       end
 
       # provision a private key to each machine for ssh access
       cfg.vm.provision "shell", inline: "cat /vagrant/id_ecdsa.pub >> ~vagrant/.ssh/authorized_keys"
       if hostname == 'control'
-        cfg.vm.provision "file", run: "always", source: "playbook-kubeadm", destination: "/home/vagrant/playbook-kubeadm"
+        
+        cfg.vm.provision "file", run: "always", source: "#{dirname}/playbook-kubeadm", destination: "/home/vagrant/playbook-kubeadm"
         cfg.vm.provision "ansible_local", run: "always" do |ansible|
           ansible.playbook = "/home/vagrant/playbook-kubeadm/playbook.yml"
           ansible.inventory_path = "/home/vagrant/playbook-kubeadm/inventory"

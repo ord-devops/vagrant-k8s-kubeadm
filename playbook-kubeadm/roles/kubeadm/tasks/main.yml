@@ -19,6 +19,30 @@
           - kubeadm
           - glusterfs-fuse
         disable_gpg_check: yes
+
+    - name: allow gluster mounts in containers
+      seboolean:
+        name: virt_sandbox_use_fusefs
+        state: yes
+        persistent: yes
+
+    - name: load kernel modules
+      modprobe:
+        state: present
+        name: "{{ item }}"
+      with_items:
+        - dm_snapshot
+        - dm_thin_pool
+        - dm_mirror
+
+    - name: persist load modules
+      copy:
+        content:
+          dm_snapshot
+          dm_thin_pool
+          dm_mirror
+        dest: /etc/modules-load.d/glusterfs.conf
+
     - systemd:
         enabled: true
         name: "{{ item }}"
