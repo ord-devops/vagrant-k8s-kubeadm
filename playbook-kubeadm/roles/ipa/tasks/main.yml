@@ -1,0 +1,12 @@
+---
+# tasks file for ipa
+- name: install packages
+  yum:
+    state: installed
+    name:
+      - ipa-server
+      - ipa-server-dns
+- name: Run the ipa-server-install command
+  command: ipa-server-install -U --setup-dns --ip-address={{ ipa_ip_address }} --hostname={{ inventory_hostname }} --domain={{ domain }} --realm={{ realm }} --ds-password={{ directory_manager_password }} --admin-password={{ principal_user_password }} --forwarder={{ dns_forwarder_1 }} --forwarder={{ dns_forwarder_2 }}
+  args:
+    creates: /etc/ipa/ca.crt

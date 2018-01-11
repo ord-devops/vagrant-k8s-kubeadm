@@ -1,0 +1,33 @@
+---
+# tasks file for ipa_client
+- name: set hostname to inventory_hostname
+  hostname: 
+    name: "{{ inventory_hostname }}"
+
+- name: disable peer dns
+  lineinfile:
+    regexp: PEERDNS.*
+    line: PEERDNS=no
+    path: "{{ item }}"
+  with_items:
+    - /etc/sysconfig/network-scripts/ifcfg-eth0
+    - /etc/sysconfig/network-scripts/ifcfg-eth1
+
+- name: resolv.conf
+  copy:
+    content: |
+      domain lab.example.com
+      search lab.example.com
+      nameserver 192.168.100.5
+    dest: /etc/resolv.conf
+
+- name: install ipa client package
+  yum:
+    name: ipa-client
+    state: installed
+
+- name: run ipa-client-install
+  command: ipa-client-install --domain={{domain_name}} --realm={{realm_name}} -p admin --password={{ipa_admin_password}} --mkhomedir --hostname={{ansible_hostname}}.{{domain_name}} --unattended
+  args:
+    creates: /etc/ipa/ca.crt
+

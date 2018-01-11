@@ -1,0 +1,9 @@
+---
+# defaults file for ipa
+directory_manager_password: dirman-123
+principal_user_password: admin-123
+dns_forwarder_1: 8.8.8.8
+dns_forwarder_2: 8.8.4.4
+domain: lab.example.com
+realm: LAB.EXAMPLE.COM
+ipa_ip_address: 192.168.100.5

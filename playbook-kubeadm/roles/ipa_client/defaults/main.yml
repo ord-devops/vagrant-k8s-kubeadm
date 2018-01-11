@@ -1,0 +1,6 @@
+---
+# defaults file for ipa_client
+domain_name: lab.example.com
+realm_name: LAB.EXAMPLE.COM
+ipa_admin_password: admin-123
+ipa_admin_user: admin

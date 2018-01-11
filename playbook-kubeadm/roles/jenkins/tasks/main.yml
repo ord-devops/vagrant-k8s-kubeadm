@@ -1,0 +1,99 @@
+---
+# tasks file for jenkins
+- name: create yum repo
+  yum_repository:
+    name: jenkins
+    state: present
+    gpgkey: https://pkg.jenkins.io/redhat/jenkins.io.key
+    gpgcheck: yes
+    enabled: yes
+    description: jenkins
+    baseurl: https://pkg.jenkins.io/redhat/
+
+- name: install packages
+  yum:
+    state: installed
+    name:
+      - java-1.8.0-openjdk
+      - jenkins
+      - git
+      - make
+
+# Certificate
+# - name: create a key
+# - name: create a csr
+# - name: submit csr to kubernetes
+# - name: approve csr
+# - name: download certificate
+# - name: generate pfx
+
+- name: slurp pfx from master
+  fetch:
+    src: /root/jenkins.pfx
+    dest: /tmp/jenkins.pfx
+    flat: yes
+  delegate_to: "{{ groups['masters'][0] }}"
+  register: jenkins_cert
+
+- name:
+  fetch:
+    src: /etc/kubernetes/pki/ca.crt
+    dest: /tmp/kubernetes-ca.crt
+    flat: yes
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: write out pfx on jenkins server
+  copy:
+    dest: /var/lib/jenkins/kubernetes.pfx
+    src: /tmp/jenkins.pfx
+    remote_src: no
+    owner: jenkins
+    group: jenkins
+
+- name: write ca cert on jenkins
+  copy:
+    dest: /var/lib/jenkins/kubernetes-ca.crt
+    src: /tmp/kubernetes-ca.crt
+    owner: jenkins
+    group: jenkins
+
+# Create user
+- name: determine if ipa user exists
+  command: id srvc_jenkins
+  register: id_jenkins
+  ignore_errors: yes
+
+- name: create jenkins service user in ipa
+  ipa_user:
+    name: srvc_jenkins
+    password: welkom01
+    givenname: Jenkins
+    sn: Serviceaccount
+    ipa_user: "{{ ipa_user }}"
+    ipa_pass: "{{ ipa_pass }}"
+    ipa_host: ipa.lab.example.com
+  register: jenkins_user
+  when: id_jenkins.rc > 0
+
+- name: reset password
+  shell: |
+           echo "welkom01
+           Jenkins-123
+           Jenkins-123
+           " | kinit srvc_jenkins
+  when: jenkins_user.changed
+
+# Init.groovy.d
+- name: copy init.groovy.d scripts
+  copy:
+    src: init.groovy.d/
+    dest: /var/lib/jenkins/init.groovy.d
+    owner: jenkins
+    group: jenkins
+  notify: restart jenkins
+
+- name: enable & start jenkins
+  systemd:
+    state: started
+    enabled: yes
+    name: jenkins
