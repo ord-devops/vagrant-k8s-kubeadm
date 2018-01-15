@@ -1,0 +1,64 @@
+- name: install pyOpenSSL
+  yum:
+    name: pyOpenSSL
+    state: installed
+  delegate_to: "{{ groups['masters'][0] }}"
+# Certificate
+- name: create a key
+  openssl_privatekey:
+    path: /etc/kubernetes/pki/jenkins.key
+    state: present
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: create a csr
+  command: openssl req -new -batch -subj /CN=jenkins -key /etc/kubernetes/pki/jenkins.key -out /etc/kubernetes/pki/jenkins.csr
+  arges:
+    creates: /etc/kubernetes/pki/jenkins.csr
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: slurp csr
+  slurp:
+    src: /etc/kubernetes/pki/jenkins.csr
+  register: jenkins_csr
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: set fact
+  set_fact:
+    csr_base64: "{{ jenkins_csr.content }}"
+
+- name: template out csr yaml
+  template:
+    src: csr.yml.j2
+    dest: /etc/kubernetes/pki/jenkins_csr.yml
+  register: jenkins_csr_yaml
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: submit csr to kubernetes
+  command: kubectl create -f  /etc/kubernetes/pki/jenkins_csr.yml
+  when: jenkins_csr_yaml.changed
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: approve csr
+  command: kubectl certificate approve jenkins
+  when: jenkins_csr_yaml.changed
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: download certificate
+  shell: kubectl get csr jenkins -o jsonpath='{.status.certificate}' | base64 -d > /etc/kubernetes/pki/jenkins.cert
+  when: jenkins_csr_yaml.changed
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: generate pfx
+  command: openssl pkcs12 -export -nodes -out /etc/kubernetes/pki/jenkins.pfx -inkey /etc/kubernetes/pki/jenkins.key -in /etc/kubernetes/pki/jenkins.cert -certfile /etc/kubernetes/pki/ca.crt -passout pass:Jenkins
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: check for clusterrolebinding
+  command: kubectl get clusterrolebinding jenkins-default-admin
+  register: crb_jenkins
+  ignore_errors: yes
+  delegate_to: "{{ groups['masters'][0] }}"
+
+- name: create clusterrolebinding
+  command: kubectl create clusterrolebinding jenkins-default-admin --user jenkins --namespace default --clusterrole admin
+  when: crb_jenkins.rc > 0
+  delegate_to: "{{ groups['masters'][0] }}"

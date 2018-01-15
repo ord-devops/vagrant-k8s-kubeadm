@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 cluster = {
-  "control" => { :ip => "192.168.100.9", :cpus => 1, :mem => 1024 },
+  "control" => { :ip => "192.168.100.9", :cpus => 4, :mem => 4096 },
   "master"  => { :ip => "192.168.100.10", :cpus => 2, :mem => 2048 },
   "node1"   => { :ip => "192.168.100.11", :cpus => 2, :mem => 2048 },
   "node2"   => { :ip => "192.168.100.12", :cpus => 2, :mem => 2048 },
@@ -12,6 +12,27 @@ cluster = {
 }
 
 dirname = File.expand_path(File.dirname(__FILE__))
+
+groups = {
+  "jenkins_servers" => ["jenkins"],
+  "nodes" => ["node1", "node2","node3"],
+  "masters" => ["master"],
+  "ipa_servers" => ["ipa"],
+  "ipa_clients:children" => ['jenkins'],
+}
+
+extra_vars = {
+  "vagrant" => true,
+}
+
+host_vars = {
+  "master" => { "k8sNodeAddress" => "192.168.100.10" },
+  "node1" => { "k8sNodeAddress" => "192.168.100.11" },
+  "node2" => { "k8sNodeAddress" => "192.168.100.12" },
+  "node3" => { "k8sNodeAddress" => "192.168.100.13" },
+  "jenkins" => { "ansible_ssh_host" => "192.168.100.20" },
+  "ipa" => { "ansible_ssh_host" => "192.168.100.5" },
+}
 
 Vagrant.configure("2") do |config|
   cluster.each_with_index do |(hostname, info), index|
@@ -38,8 +59,11 @@ Vagrant.configure("2") do |config|
         cfg.vm.provision "file", run: "always", source: "#{dirname}/playbook-kubeadm", destination: "/home/vagrant/playbook-kubeadm"
         cfg.vm.provision "ansible_local", run: "always" do |ansible|
           ansible.playbook = "/home/vagrant/playbook-kubeadm/playbook.yml"
-          ansible.inventory_path = "/home/vagrant/playbook-kubeadm/inventory"
+          # ansible.inventory_path = "/home/vagrant/playbook-kubeadm/inventory"
           ansible.limit = "all"
+          ansible.groups = groups
+          ansible.extra_vars = extra_vars
+          ansible.host_vars = host_vars
         end
       end
     end

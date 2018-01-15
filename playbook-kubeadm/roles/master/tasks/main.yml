@@ -4,13 +4,13 @@
   register: kube_token_generate
 
 - name: set token fact
-  set_fact: 
+  set_fact:
     kubeadm_token: "{{ kube_token_generate.stdout }}"
-      
+
 - name: perform kubeadm init
   command: kubeadm init \
              --token={{ kubeadm_token }}
-             --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
+             --apiserver-advertise-address={{ k8sMasterAddress }}
              --pod-network-cidr={{ k8s_podCidr }}
   args:
     creates: /etc/kubernetes/admin.conf

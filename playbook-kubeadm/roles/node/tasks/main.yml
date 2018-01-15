@@ -4,13 +4,15 @@
   command: "{{ hostvars[groups['masters'][0]].join_command }}"
   args:
     creates:  /etc/kubernetes/pki/ca.crt
+
 - name: add Extra args dropin
   copy:
     content: |
       [Service]
-      Environment=KUBELET_EXTRA_ARGS=--node-ip={{ ansible_eth1.ipv4.address }}
+      Environment=KUBELET_EXTRA_ARGS=--node-ip={{ k8sNodeAddress }}
     dest: /etc/systemd/system/kubelet.service.d/20-extra-args.conf
   register: kubelet_extra
+  when: vagrant
 
 - name: reload systemd
   command: systemctl daemon-reload
