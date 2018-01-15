@@ -19,7 +19,7 @@
       - git
       - make
 
-- include: kubernetes.yml
+- include_tasks: kubernetes.yml
 
 - name: slurp pfx from master
   fetch:
@@ -56,6 +56,7 @@
   command: id srvc_jenkins
   register: id_jenkins
   ignore_errors: yes
+  when: vagrant
 
 - name: create jenkins service user in ipa
   ipa_user:

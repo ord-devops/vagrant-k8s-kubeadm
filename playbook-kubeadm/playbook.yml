@@ -1,24 +1,27 @@
 ---
 - name: create ipa server
   become: true
-  hosts: 
-    - ipa
+  hosts:
+    - ipa_servers
   roles:
     - ipa
 
 - name: join ipa server
   hosts:
     - ipa_clients
-  roles:
-    - ipa_client
   become: true
+  tasks:
+  - name: deploy ipa client role
+    include_role:
+      name: ipa_client
+    when: deploy_ipa
 
 - name: deploy cluster
   become: true
   hosts:
     - nodes
     - masters
-  roles: 
+  roles:
     - kubeadm
 
 - name: init master
@@ -35,9 +38,10 @@
     - masters
   roles:
     - node
+
 - name: jenkins
   become: true
   hosts:
-    - jenkins
+    - jenkins_servers
   roles:
     - jenkins
