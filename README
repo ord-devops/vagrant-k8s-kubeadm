@@ -1,6 +1,6 @@
 # Vagrantfile and playbook for kubeadm cluster
 
-Sets up a control node and a 4 node cluster
+Sets up a control node and a 4 node cluster, as well as an IPA server and jenkins
 
 * install vagrant and virtualbox
 * add a public ecdsa key in project root
