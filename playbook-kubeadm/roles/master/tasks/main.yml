@@ -12,6 +12,7 @@
              --token={{ kubeadm_token }}
              --apiserver-advertise-address={{ k8sMasterAddress }}
              --pod-network-cidr={{ k8s_podCidr }}
+             --service-cidr={{ k8s_ServiceCidr }}
   args:
     creates: /etc/kubernetes/admin.conf
   register: kubeadm_init
